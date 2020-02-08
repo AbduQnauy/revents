@@ -1,5 +1,8 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import { Segment, Form, Button } from "semantic-ui-react";
+import { createEvent, updateEvent } from "../eventActions";
+import cuid from "cuid";
 
 class EventForm extends Component {
   state = { title: "", date: "", city: "", venue: "", hostedBy: "" };
@@ -15,8 +18,15 @@ class EventForm extends Component {
     DOMevent.preventDefault();
     if (this.state.id) {
       this.props.updateEvent(this.state);
+      this.props.history.push(`/events/${this.state.id}`);
     } else {
-      this.props.createEvent(this.state);
+      const newEvent = {
+        ...this.state,
+        id: cuid(),
+        hostPhotoURL: "/assets/user.png"
+      };
+      this.props.createEvent(newEvent);
+      this.props.history.push(`/events`);
     }
   };
 
@@ -26,7 +36,6 @@ class EventForm extends Component {
     });
   };
   render() {
-    const { cancelFormOpen } = this.props;
     const { title, date, city, venue, hostedBy } = this.state;
     return (
       <Segment>
@@ -82,7 +91,7 @@ class EventForm extends Component {
           <Button positive type="submit">
             Submit
           </Button>
-          <Button onClick={cancelFormOpen} type="button">
+          <Button onClick={this.props.history.goBack} type="button">
             Cancel
           </Button>
         </Form>
@@ -90,4 +99,17 @@ class EventForm extends Component {
     );
   }
 }
-export default EventForm;
+
+const mapStateToProps = (state, ownProps) => ({
+  selectedEvent: state.events.find(
+    event => event.id === ownProps.match.params.id
+  )
+});
+const actions = {
+  createEvent,
+  updateEvent
+};
+export default connect(
+  mapStateToProps,
+  actions
+)(EventForm);
